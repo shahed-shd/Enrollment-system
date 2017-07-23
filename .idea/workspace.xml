@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4457551b-59b4-40a1-9f75-ba712b35cb6b" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main.py" afterPath="$PROJECT_DIR$/main.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -21,8 +20,8 @@
       <file leaf-file-name="main.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="187">
-              <caret line="23" column="47" lean-forward="false" selection-start-line="23" selection-start-column="47" selection-end-line="23" selection-end-column="47" />
+            <state relative-caret-position="117">
+              <caret line="122" column="17" lean-forward="false" selection-start-line="122" selection-start-column="17" selection-end-line="122" selection-end-column="17" />
               <folding />
             </state>
           </provider>
@@ -225,7 +224,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1366" height="741" extended-state="1" />
+    <frame x="0" y="0" width="1366" height="741" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.100439884" sideWeight="0.49191687" order="0" side_tool="false" content_ui="combo" />
@@ -305,8 +304,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="23" column="47" lean-forward="false" selection-start-line="23" selection-start-column="47" selection-end-line="23" selection-end-column="47" />
+        <state relative-caret-position="117">
+          <caret line="122" column="17" lean-forward="false" selection-start-line="122" selection-start-column="17" selection-end-line="122" selection-end-column="17" />
           <folding />
         </state>
       </provider>
