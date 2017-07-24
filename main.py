@@ -189,6 +189,41 @@ class FileChooserPopup(Popup):
         self.dismiss()
 
 
+class AddNewTabLayout(RelativeLayout):
+    def __init__(self, **kwargs):
+        super(AddNewTabLayout, self).__init__(**kwargs)
+
+        self.student_info_input_layout = StudentInfoInputLayout(size_hint=(1, 0.75), pos_hint={'x': 0, 'y': 0.25})
+        self.text_input_file_choose = TextInput(text='', hint_text='No file selected', readonly=True, size_hint=(0.6, 0.057), pos_hint={'x': 0.25, 'y': 0.17})
+        self.file_chooser_popup = FileChooserPopup(size_hint=(0.8, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.file_chooser_popup.bind( on_dismiss=lambda popup_instance, *a: setattr(self.text_input_file_choose, 'text', popup_instance.text_input.text))
+
+        self.add_widget(self.student_info_input_layout)
+
+        self.add_widget(Label(text='Photo:', italic=True, size_hint=(0.25, 0.057), pos_hint={'x': 0, 'y': 0.17}))
+        self.add_widget(self.text_input_file_choose)
+        self.add_widget(Button(text='Choose', italic=True, on_release=self.file_chooser_popup.open, size_hint=(0.14, 0.057), pos_hint={'x': 0.85, 'y': 0.17}))
+
+        self.add_widget(Button(text='Add', italic=True, size_hint=(0.45, 0.075), pos_hint={'x': 0.05, 'y': 0.03}))
+        self.add_widget(Button(text='Reset', italic=True, on_release=self.reset_btn_do, size_hint=(0.45, 0.075), pos_hint={'x': 0.5, 'y': 0.03}))
+
+
+    def reset_btn_do(self, *a):
+        self.student_info_input_layout.reset_fields()
+        self.text_input_file_choose.text = ''
+
+
+class FindTabLayout(RelativeLayout):
+    def __init__(self, **kwargs):
+        super(FindTabLayout, self).__init__(**kwargs)
+
+        self.student_info_input_layout = StudentInfoInputLayout(size_hint=(0.50, 0.85), pos_hint={'x': 0, 'y': 0.15})
+
+        self.add_widget(self.student_info_input_layout)
+        self.add_widget(Button(text='Find', italic=True, size_hint=(0.20, 0.075), pos_hint={'x': 0.05, 'y': 0.03}))
+        self.add_widget(Button(text='Reset', italic=True, on_release=self.student_info_input_layout.reset_fields, size_hint=(0.20, 0.075), pos_hint={'x': 0.25, 'y': 0.03}))
+
+
 class HomeScreenLayout(FloatLayout):
     def __init__(self, **kwargs):
         super(HomeScreenLayout, self).__init__(**kwargs)
@@ -196,39 +231,16 @@ class HomeScreenLayout(FloatLayout):
         tp = TabbedPanel(do_default_tab=False)
 
         self.th_home = TabbedPanelHeader(text='Home')
-        self.th_add_new = TabbedPanelHeader(text='Add new')
-        self.th_find = TabbedPanelHeader(text='Find')
+        self.th_add_new = TabbedPanelHeader(text='Add new', content=AddNewTabLayout())
+        self.th_find = TabbedPanelHeader(text='Find', content=FindTabLayout())
+
+        # self.th_add_new.content = layout
 
         tp.add_widget(self.th_home)
         tp.add_widget(self.th_add_new)
         tp.add_widget(self.th_find)
 
-        # th_add new content
-        self.file_chooser_popup = FileChooserPopup(size_hint=(0.8, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5})
-        self.file_chooser_popup.bind(on_dismiss=lambda popup_instance, *a: setattr(self.th_add_new.content.text_input_file_choose, 'text', popup_instance.text_input.text))
-
-        layout = RelativeLayout()
-
-        layout.student_info_input_layout = StudentInfoInputLayout(size_hint=(1, 0.75), pos_hint={'x': 0, 'y': 0.25})
-        layout.text_input_file_choose = TextInput(text='', readonly=True, size_hint=(0.6, 0.057), pos_hint={'x': 0.25, 'y': 0.17})
-
-        layout.add_widget(layout.student_info_input_layout)
-
-        layout.add_widget(Label(text='Photo:', italic=True, size_hint=(0.25, 0.057), pos_hint={'x': 0, 'y': 0.17}))
-        layout.add_widget(layout.text_input_file_choose)
-        layout.add_widget(Button(text='Choose', italic=True, on_release=self.file_chooser_popup.open, size_hint=(0.14, 0.057), pos_hint={'x': 0.85, 'y': 0.17}))
-
-        layout.add_widget(Button(text='Add', italic=True, size_hint=(0.45, 0.075), pos_hint={'x': 0.05, 'y': 0.03}))
-        layout.add_widget(Button(text='Reset', italic=True, on_release=self.add_new_reset_btn_do, size_hint=(0.45, 0.075), pos_hint={'x': 0.5, 'y': 0.03}))
-
-        self.th_add_new.content = layout
-
         self.add_widget(tp)
-
-
-    def add_new_reset_btn_do(self, *a):
-        self.th_add_new.content.student_info_input_layout.reset_fields()
-        self.th_add_new.content.text_input_file_choose.text = ''
 
 
 class StartScreenLayout(FloatLayout):
