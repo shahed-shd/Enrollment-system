@@ -18,6 +18,7 @@ from kivy.graphics import Color, Rectangle
 
 from sqlalchemy import create_engine, Table, Column, Integer, String, Date, Float
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 # SQL part ..................................................
 
@@ -56,6 +57,8 @@ class Student(Base):
 
 
 Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+session = Session()
 
 # UI part ..................................................
 
