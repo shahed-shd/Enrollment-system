@@ -26,8 +26,8 @@ Base = declarative_base()
 
 class Student(Base):
     __table__ = Table('students', Base.metadata,
-                      Column('roll_no', Integer, primary_key=True),
                       Column('dept', String(5), primary_key=True),
+                      Column('roll_no', Integer, primary_key=True),
                       Column('first_name', String(25)),
                       Column('last_name', String(25)),
                       Column('fathers_name', String(50)),
@@ -63,10 +63,6 @@ class StudentInfoInputLayout(RelativeLayout):
 
         n = 14
         idx = n
-
-        idx -= 1
-        self.label_rollno = Label(text="Roll no:", italic=True, size_hint=(0.25, 1/n), pos_hint={'x': 0, 'y': 1/n*idx})
-        self.text_input_rollno = TextInput(text='', hint_text='Enter roll no here.', password=False, multiline=False, write_tab=False, focus=False, input_filter='int', size_hint=(0.25, 1/n), pos_hint={'x': 0.25, 'y': 1/n*idx})
 
         idx -= 1
         self.label_name = Label(text="Name:", italic=True, size_hint=(0.25, 1 / n), pos_hint={'x': 0, 'y': 1 / n * idx})
@@ -131,8 +127,10 @@ class StudentInfoInputLayout(RelativeLayout):
         self.label_dept = Label(text='Department:', italic=True, size_hint=(0.25, 1 / n), pos_hint={'x': 0, 'y': 1 / n * idx})
         self.spinner_dept = Spinner(text='CSE', values=('CSE', 'ECE', 'BBA'), size_hint=(0.5, 1 / n), pos_hint={'x': 0.25, 'y': 1 / n * idx})
 
-        self.add_widget(self.label_rollno)
-        self.add_widget(self.text_input_rollno)
+        idx -= 1
+        self.label_rollno = Label(text="Roll no:", italic=True, size_hint=(0.25, 1/n), pos_hint={'x': 0, 'y': 1/n*idx})
+        self.text_input_rollno = TextInput(text='', hint_text='Roll no.', password=False, multiline=False, write_tab=False, focus=False, input_filter='int', size_hint=(0.25, 1/n), pos_hint={'x': 0.25, 'y': 1/n*idx})
+
         self.add_widget(self.label_name)
         self.add_widget(self.text_input_firstname)
         self.add_widget(self.text_input_lastname)
@@ -170,6 +168,8 @@ class StudentInfoInputLayout(RelativeLayout):
         self.add_widget(self.spinner_hsc_board)
         self.add_widget(self.label_dept)
         self.add_widget(self.spinner_dept)
+        self.add_widget(self.label_rollno)
+        self.add_widget(self.text_input_rollno)
 
 
     def reset_fields(self, *a):
