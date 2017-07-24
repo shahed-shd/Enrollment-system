@@ -6,12 +6,14 @@ from kivy.cache import Cache
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.tabbedpanel import TabbedPanel, TabbedPanelHeader
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.uix.popup import Popup
 from kivy.uix.image import Image
 from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
+from kivy.uix.popup import Popup
+from kivy.uix.filechooser import FileChooserListView
 from kivy.graphics import Color, Rectangle
 
 
@@ -130,11 +132,103 @@ class StudentInfoInputLayout(RelativeLayout):
         self.add_widget(self.spinner_dept)
 
 
+    def reset_fields(self, *a):
+        self.text_input_rollno.text = ''
+        self.text_input_firstname.text = ''
+        self.text_input_lastname.text = ''
+        self.text_input_fathersname.text = ''
+        self.text_input_mothersname.text = ''
+        self.spinner_gender.text = 'Male'
+        self.spinner_bloodgroup.text = 'O+'
+        self.text_input_dob_day.text = ''
+        self.text_input_dob_month.text = ''
+        self.text_input_dob_year.text = ''
+        self.text_input_address.text = ''
+        self.text_input_nationality.text = ''
+        self.text_input_email_address.text = ''
+        self.text_input_phone_no.text = ''
+        self.text_input_ssc_roll.text = ''
+        self.text_input_ssc_reg.text = ''
+        self.text_input_ssc_gpa.text = ''
+        self.text_input_ssc_year.text = ''
+        self.spinner_ssc_board.text = 'Dhaka'
+        self.text_input_hsc_roll.text = ''
+        self.text_input_hsc_reg.text = ''
+        self.text_input_hsc_gpa.text = ''
+        self.text_input_hsc_year.text = ''
+        self.spinner_hsc_board.text = 'Dhaka'
+        self.spinner_dept.text = 'CSE'
+
+
+class FileChooserPopup(Popup):
+    def __init__(self, **kwargs):
+        super(FileChooserPopup, self).__init__(**kwargs)
+
+        self.title = 'Select photo (.jpg, .jpeg, .png)'
+
+        layout = RelativeLayout()
+
+        file_chooser_list_view = FileChooserListView(filters=['*.jpg', '*.jpeg', '*.png'], size_hint=(1, 0.8), pos_hint={'x': 0, 'y': 0.2})
+        file_chooser_list_view.bind(selection=self.file_chooser_selection_do)
+        self.text_input = TextInput(text='', readonly=True, size_hint=(1, 0.1), pos_hint={'x': 0, 'y': 0.1})
+
+        layout.add_widget(file_chooser_list_view)
+        layout.add_widget(self.text_input)
+        layout.add_widget(Button(text='Select', italic=True, on_release=self.dismiss, size_hint=(0.25, 0.1), pos_hint={'x': 0.25, 'y': 0}))
+        layout.add_widget(Button(text='Cancel', italic=True, on_release=self.cancel_btn_do, size_hint=(0.25, 0.1), pos_hint={'x': 0.5, 'y': 0}))
+
+        self.content = layout
+
+
+    def file_chooser_selection_do(self, fc, selection, *a):
+        self.text_input.text = selection[0] if selection else ''
+
+
+    def cancel_btn_do(self, *a):
+        self.text_input.text = ''
+        self.dismiss()
+
+
 class HomeScreenLayout(FloatLayout):
     def __init__(self, **kwargs):
         super(HomeScreenLayout, self).__init__(**kwargs)
 
-        self.add_widget(StudentInfoInputLayout())
+        tp = TabbedPanel(do_default_tab=False)
+
+        self.th_home = TabbedPanelHeader(text='Home')
+        self.th_add_new = TabbedPanelHeader(text='Add new')
+        self.th_find = TabbedPanelHeader(text='Find')
+
+        tp.add_widget(self.th_home)
+        tp.add_widget(self.th_add_new)
+        tp.add_widget(self.th_find)
+
+        # th_add new content
+        self.file_chooser_popup = FileChooserPopup(size_hint=(0.8, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.file_chooser_popup.bind(on_dismiss=lambda popup_instance, *a: setattr(self.th_add_new.content.text_input_file_choose, 'text', popup_instance.text_input.text))
+
+        layout = RelativeLayout()
+
+        layout.student_info_input_layout = StudentInfoInputLayout(size_hint=(1, 0.75), pos_hint={'x': 0, 'y': 0.25})
+        layout.text_input_file_choose = TextInput(text='', readonly=True, size_hint=(0.6, 0.057), pos_hint={'x': 0.25, 'y': 0.17})
+
+        layout.add_widget(layout.student_info_input_layout)
+
+        layout.add_widget(Label(text='Photo:', italic=True, size_hint=(0.25, 0.057), pos_hint={'x': 0, 'y': 0.17}))
+        layout.add_widget(layout.text_input_file_choose)
+        layout.add_widget(Button(text='Choose', italic=True, on_release=self.file_chooser_popup.open, size_hint=(0.14, 0.057), pos_hint={'x': 0.85, 'y': 0.17}))
+
+        layout.add_widget(Button(text='Add', italic=True, size_hint=(0.45, 0.075), pos_hint={'x': 0.05, 'y': 0.03}))
+        layout.add_widget(Button(text='Reset', italic=True, on_release=self.add_new_reset_btn_do, size_hint=(0.45, 0.075), pos_hint={'x': 0.5, 'y': 0.03}))
+
+        self.th_add_new.content = layout
+
+        self.add_widget(tp)
+
+
+    def add_new_reset_btn_do(self, *a):
+        self.th_add_new.content.student_info_input_layout.reset_fields()
+        self.th_add_new.content.text_input_file_choose.text = ''
 
 
 class StartScreenLayout(FloatLayout):
