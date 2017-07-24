@@ -16,6 +16,46 @@ from kivy.uix.popup import Popup
 from kivy.uix.filechooser import FileChooserListView
 from kivy.graphics import Color, Rectangle
 
+from sqlalchemy import create_engine, Table, Column, Integer, String, Date, Float
+from sqlalchemy.ext.declarative import declarative_base
+
+# SQL part ..................................................
+
+engine = create_engine('mysql+pymysql://root:abcd1234@localhost/enrollment_system', echo=True)
+Base = declarative_base()
+
+class Student(Base):
+    __table__ = Table('students', Base.metadata,
+                      Column('roll_no', Integer, primary_key=True),
+                      Column('dept', String(5), primary_key=True),
+                      Column('first_name', String(25)),
+                      Column('last_name', String(25)),
+                      Column('fathers_name', String(50)),
+                      Column('mothers_name', String(50)),
+                      Column('gender', String(10)),
+                      Column('blood_group', String(5)),
+                      Column('date_of_birth', Date),
+                      Column('address', String(200)),
+                      Column('nationality', String(25)),
+                      Column('email_address', String(100)),
+                      Column('Phone_no', String(25)),
+                      Column('ssc_roll_no', Integer),
+                      Column('ssc_reg_no', Integer),
+                      Column('ssc_gpa', Float),
+                      Column('ssc_year', Integer),
+                      Column('ssc_board', String(25)),
+                      Column('hsc_roll_no', Integer),
+                      Column('hsc_reg_no', Integer),
+                      Column('hsc_gpa', Float),
+                      Column('hsc_year', Integer),
+                      Column('hsc_board', String(25)),
+                      Column('photo_path', String(150)))
+
+    def __repr__(self):
+        return "<Student(roll_no={}, dept={}, name={} {},)>".format(self.roll_no, self.dept, self.first_name, self.last_name)
+
+# UI part ..................................................
+
 
 class StudentInfoInputLayout(RelativeLayout):
     def __init__(self, **kwargs):
