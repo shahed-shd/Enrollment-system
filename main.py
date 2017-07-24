@@ -38,7 +38,7 @@ class Student(Base):
                       Column('address', String(200)),
                       Column('nationality', String(25)),
                       Column('email_address', String(100)),
-                      Column('Phone_no', String(25)),
+                      Column('phone_no', String(25)),
                       Column('ssc_roll_no', Integer),
                       Column('ssc_reg_no', Integer),
                       Column('ssc_gpa', Float),
@@ -53,6 +53,9 @@ class Student(Base):
 
     def __repr__(self):
         return "<Student(roll_no={}, dept={}, name={} {},)>".format(self.roll_no, self.dept, self.first_name, self.last_name)
+
+
+Base.metadata.create_all(engine)
 
 # UI part ..................................................
 
