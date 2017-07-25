@@ -77,9 +77,10 @@ def find_next_roll_to_have(L, start):
 
     len_L = len(L)
 
-    for i in range(1, len_L):
-        if not L[i-1]+1 == L[i]:
-            return L[i-1] + 1
+    if len_L > 1:
+        for i in range(1, len_L):
+            if not L[i-1]+1 == L[i]:
+                return L[i-1] + 1
 
     return L[-1] + 1
 
@@ -377,10 +378,16 @@ class HomeTabLayout(RelativeLayout):
     def save_start_roll_changes(self, *a):
         store = Cache.get('global_data', 'records_store')
 
-        store.put('CSE', start=self.text_input_cse_start_roll.text)
-        store.put('ECE', start=self.text_input_ece_start_roll.text)
-        store.put('BBA', start=self.text_input_bba_start_roll.text)
+        def check_and_go(dept):
+            if session.query(Student.roll_no).filter(Student.dept == dept).count() == 0:
+                store.put(dept, start=getattr(getattr(self, 'text_input_' + dept.lower() + '_start_roll'), 'text'))
+            else:
+                setattr(getattr(self, 'text_input_' + dept.lower() + '_start_roll'), 'text', store.get('CSE')['start'])
 
+        check_and_go('CSE')
+        check_and_go('ECE')
+        check_and_go('BBA')
+        
 
     def password_change_validation(self, *a):
         content = self.popup_change_password.content
@@ -425,13 +432,14 @@ class AddNewTabLayout(RelativeLayout):
     def student_info_input_dept_bind(self, *a):
         '''Set the roll according to dept.'''
         dept = self.student_info_input_layout.spinner_dept.text
-        res = session.query(Student.roll_no).filter(Student.dept == dept).all()
+        res = session.query(Student.roll_no).filter(Student.dept == dept).order_by(Student.roll_no)
+        L = [x[0] for x in res]
 
         store = Cache.get('global_data', 'records_store')
-        start = store.get(dept)['start']
+        start = int(store.get(dept)['start'])
 
-        next_roll = find_next_roll_to_have(res, start)
-        self.student_info_input_layout.text_input_rollno.text = next_roll
+        next_roll = find_next_roll_to_have(L, start)
+        self.student_info_input_layout.text_input_rollno.text = str(next_roll)
 
 
     def reset_btn_do(self, *a):
@@ -511,9 +519,9 @@ class AddNewTabLayout(RelativeLayout):
         if not input_to_obj('spinner_dept', 'dept'): return
         if not input_to_obj('text_input_rollno', 'roll_no'): return
 
-        self.reset_btn_do()
         session.add(new_student)
         session.commit()
+        self.reset_btn_do()
         self.label_dialogue.text = 'Student added.'
 
 
