@@ -2,6 +2,9 @@ import kivy
 kivy.require('1.10.0')
 
 import time
+import datetime
+import re
+import shutil
 
 from kivy.app import App
 from kivy.cache import Cache
@@ -19,7 +22,7 @@ from kivy.uix.filechooser import FileChooserListView
 from kivy.storage.jsonstore import JsonStore
 from kivy.graphics import Color, Rectangle
 
-from sqlalchemy import create_engine, Table, Column, Integer, String, Date, Float
+from sqlalchemy import create_engine, Table, Column, Integer, String, Date, Float, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -55,6 +58,7 @@ class Student(Base):
                       Column('hsc_board', String(25)),
                       Column('photo_path', String(150)))
 
+
     def __repr__(self):
         return "<Student(roll_no={}, dept={}, name={} {},)>".format(self.roll_no, self.dept, self.first_name, self.last_name)
 
@@ -62,6 +66,35 @@ class Student(Base):
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
+
+
+def find_next_roll_to_have(L, start):
+    if not L:
+        return start
+
+    if L[0] != start:
+        return start
+
+    len_L = len(L)
+
+    for i in range(1, len_L):
+        if not L[i-1]+1 == L[i]:
+            return L[i-1] + 1
+
+    return L[-1] + 1
+
+
+def is_valid_date(y, m, d):
+    try:
+        datetime.date(year=y, month=m, day=d)
+    except:
+        return False
+
+    return True
+
+
+def is_valid_emaid(email):
+    return  bool(re.match(r"^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$", email))
 
 # UI part ..................................................
 
@@ -182,7 +215,6 @@ class StudentInfoInputLayout(RelativeLayout):
 
 
     def reset_fields(self, *a):
-        self.text_input_rollno.text = ''
         self.text_input_firstname.text = ''
         self.text_input_lastname.text = ''
         self.text_input_fathersname.text = ''
@@ -207,6 +239,7 @@ class StudentInfoInputLayout(RelativeLayout):
         self.text_input_hsc_year.text = ''
         self.spinner_hsc_board.text = 'Dhaka'
         self.spinner_dept.text = 'CSE'
+        self.text_input_rollno.text = ''
 
 
 class FileChooserPopup(Popup):
@@ -365,12 +398,14 @@ class HomeTabLayout(RelativeLayout):
             self.popup_change_password.dismiss()
 
 
-
 class AddNewTabLayout(RelativeLayout):
     def __init__(self, **kwargs):
         super(AddNewTabLayout, self).__init__(**kwargs)
 
         self.student_info_input_layout = StudentInfoInputLayout(size_hint=(1, 0.75), pos_hint={'x': 0, 'y': 0.25})
+        self.student_info_input_dept_bind()     # first fill the roll.
+        self.student_info_input_layout.spinner_dept.bind(text=self.student_info_input_dept_bind)
+        self.student_info_input_layout.text_input_rollno.readonly = True
         self.text_input_file_choose = TextInput(text='', hint_text='No file selected', readonly=True, size_hint=(0.6, 0.057), pos_hint={'x': 0.25, 'y': 0.17})
         self.file_chooser_popup = FileChooserPopup(size_hint=(0.8, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         self.file_chooser_popup.bind( on_dismiss=lambda popup_instance, *a: setattr(self.text_input_file_choose, 'text', popup_instance.text_input.text))
@@ -381,13 +416,105 @@ class AddNewTabLayout(RelativeLayout):
         self.add_widget(self.text_input_file_choose)
         self.add_widget(Button(text='Choose', italic=True, on_release=self.file_chooser_popup.open, size_hint=(0.14, 0.057), pos_hint={'x': 0.85, 'y': 0.17}))
 
-        self.add_widget(Button(text='Add', italic=True, size_hint=(0.45, 0.075), pos_hint={'x': 0.05, 'y': 0.03}))
-        self.add_widget(Button(text='Reset', italic=True, on_release=self.reset_btn_do, size_hint=(0.45, 0.075), pos_hint={'x': 0.5, 'y': 0.03}))
+        self.add_widget(Button(text='Add', italic=True, on_release=self.add_new_student, size_hint=(0.45, 0.05), pos_hint={'x': 0.05, 'y': 0.075}))
+        self.add_widget(Button(text='Reset', italic=True, on_release=self.reset_btn_do, size_hint=(0.45, 0.05), pos_hint={'x': 0.5, 'y': 0.075}))
+        self.label_dialogue = Label(text='', italic=True, size_hint=(1, 0.075), pos_hint={'x': 0, 'y': 0})
+        self.add_widget(self.label_dialogue)
+
+
+    def student_info_input_dept_bind(self, *a):
+        '''Set the roll according to dept.'''
+        dept = self.student_info_input_layout.spinner_dept.text
+        res = session.query(Student.roll_no).filter(Student.dept == dept).all()
+
+        store = Cache.get('global_data', 'records_store')
+        start = store.get(dept)['start']
+
+        next_roll = find_next_roll_to_have(res, start)
+        self.student_info_input_layout.text_input_rollno.text = next_roll
 
 
     def reset_btn_do(self, *a):
         self.student_info_input_layout.reset_fields()
         self.text_input_file_choose.text = ''
+        self.student_info_input_dept_bind()
+        self.label_dialogue.text = ''
+
+
+    def add_new_student(self, *a):
+        self.label_dialogue.text = ''
+        inp = self.student_info_input_layout
+        new_student = Student()
+
+        def input_to_obj(input_attr, obj_attr, meta=''):
+            value = getattr(inp, input_attr).text
+            print(input_attr, ',', obj_attr, ',', value, ',', len(value), ',', meta)
+            if value:
+                setattr(new_student, obj_attr, value)
+                return True
+            else:
+                self.label_dialogue.text = meta + " needs to be filled up !"
+                return False
+
+        if not input_to_obj('text_input_firstname', 'first_name', 'First name'): return
+        if not input_to_obj('text_input_lastname', 'last_name', 'Last name'): return
+        if not input_to_obj('text_input_fathersname', 'fathers_name', "Father's name"): return
+        if not input_to_obj('text_input_mothersname', 'mothers_name', "Mother's name"): return
+        if not input_to_obj('spinner_gender', 'gender'): return
+        if not input_to_obj('spinner_bloodgroup', 'blood_group'): return
+
+        if inp.text_input_dob_day.text != '' and inp.text_input_dob_month.text != '' and inp.text_input_dob_year.text != '':
+            d = int(inp.text_input_dob_day.text)
+            m = int(inp.text_input_dob_month.text)
+            y = int(inp.text_input_dob_year.text)
+
+            if is_valid_date(y, m, d):
+                new_student.date_of_birth = datetime.date(year=y, month=m, day=d)
+            else:
+                self.label_dialogue.text = "Invalid date of birth !"
+                return
+        else:
+            self.label_dialogue.text = "Date of birth needs to be filled up !"
+            return
+
+        if not input_to_obj('text_input_address', 'address', 'Address'): return
+        if not input_to_obj('text_input_nationality', 'nationality', 'Nationality'): return
+
+        email = inp.text_input_email_address.text
+        if email:
+            if is_valid_emaid(email):
+                input_to_obj('text_input_email_address', 'email_address')
+            else:
+                self.label_dialogue.text = "Invalid email address !"
+                return
+        else:
+            self.label_dialogue.text = "Email address needs to be filled up !"
+            return
+
+        if not input_to_obj('text_input_phone_no', 'phone_no', 'Phone no.'): return
+        if not input_to_obj('text_input_ssc_roll', 'ssc_roll_no', 'SSC roll no. '): return
+        if not input_to_obj('text_input_ssc_reg', 'ssc_reg_no', 'SSC reg. no.'): return
+        if not input_to_obj('text_input_ssc_gpa', 'ssc_gpa', 'SSC GPA'): return
+        if not input_to_obj('text_input_ssc_year', 'ssc_year', 'SSC passing year'): return
+        if not input_to_obj('spinner_ssc_board', 'ssc_board'): return
+        if not input_to_obj('text_input_hsc_roll', 'hsc_roll_no', 'HSC roll no.'): return
+        if not input_to_obj('text_input_hsc_reg', 'hsc_reg_no', 'HSC reg. no.'): return
+        if not input_to_obj('text_input_hsc_gpa', 'hsc_gpa', 'HSC GPA'): return
+        if not input_to_obj('text_input_hsc_year', 'hsc_year', 'HSC passing year'): return
+        if not input_to_obj('spinner_hsc_board', 'hsc_board'): return
+
+        photo_path_from = self.text_input_file_choose.text if self.text_input_file_choose.text != '' else 'images/blank_profile_pic.jpg'
+        photo_path_to = 'images/profile_pics/' + inp.spinner_dept.text + '-' + inp.text_input_rollno.text
+        shutil.copyfile(photo_path_from, photo_path_to)
+        new_student.photo_path = photo_path_to
+
+        if not input_to_obj('spinner_dept', 'dept'): return
+        if not input_to_obj('text_input_rollno', 'roll_no'): return
+
+        self.reset_btn_do()
+        session.add(new_student)
+        session.commit()
+        self.label_dialogue.text = 'Student added.'
 
 
 class FindTabLayout(RelativeLayout):
