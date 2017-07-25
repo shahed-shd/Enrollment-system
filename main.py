@@ -1,6 +1,8 @@
 import kivy
 kivy.require('1.10.0')
 
+import time
+
 from kivy.app import App
 from kivy.cache import Cache
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -14,6 +16,7 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
 from kivy.uix.filechooser import FileChooserListView
+from kivy.storage.jsonstore import JsonStore
 from kivy.graphics import Color, Rectangle
 
 from sqlalchemy import create_engine, Table, Column, Integer, String, Date, Float
@@ -235,6 +238,134 @@ class FileChooserPopup(Popup):
         self.dismiss()
 
 
+class HomeTabLayout(RelativeLayout):
+    def __init__(self, **kwargs):
+        super(HomeTabLayout, self).__init__(**kwargs)
+
+        # Get start value
+        store = Cache.get('global_data', 'records_store')
+
+        if store.exists('CSE'):
+            cse_start = store.get('CSE')['start']
+        else:
+            curr_year = time.localtime(time.time()).tm_year
+            cse_start = str(curr_year * 1000 + 1)
+            store.put('CSE', start=cse_start)
+
+        if store.exists('ECE'):
+            ece_start = store.get('ECE')['start']
+        else:
+            curr_year = time.localtime(time.time()).tm_year
+            ece_start = str(curr_year * 1000 + 1)
+            store.put('ECE', start=ece_start)
+
+        if store.exists('BBA'):
+            bba_start = store.get('BBA')['start']
+        else:
+            curr_year = time.localtime(time.time()).tm_year
+            bba_start = str(curr_year * 1000 + 1)
+            store.put('BBA', start=bba_start)
+
+        # Password change popup
+        layout = RelativeLayout()
+        self.popup_change_password = Popup(title='Change password', title_align='center', content=layout, size_hint=(0.6, 0.5), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.popup_change_password.bind(on_open=lambda *a: setattr(layout.text_input_curr_pw, 'text', ''))
+        self.popup_change_password.bind(on_open=lambda *a: setattr(layout.text_input_new_pw, 'text', ''))
+        self.popup_change_password.bind(on_open=lambda *a: setattr(layout.text_input_re_new_pw, 'text', ''))
+        n = 7
+        idx = n
+
+        idx -= 1
+        layout.add_widget(Label(text='Current password:', italic=True, size_hint=(0.4, 1 / n), pos_hint={'x': 0, 'y': 1 / n * idx}))
+        layout.text_input_curr_pw = TextInput(text='', hint_text='Current password', password=True, multiline=False, write_tab=False, focus=False, size_hint=(0.6, 1 / n), pos_hint={'x': 0.4, 'y': 1 / n * idx})
+        layout.add_widget(layout.text_input_curr_pw)
+
+        idx -= 1
+        layout.add_widget(Label(text='New password:', italic=True, size_hint=(0.4, 1 / n), pos_hint={'x': 0, 'y': 1 / n * idx}))
+        layout.text_input_new_pw = TextInput(text='', hint_text='New password', password=True, multiline=False, write_tab=False, focus=False, size_hint=(0.6, 1 / n), pos_hint={'x': 0.4, 'y': 1 / n * idx})
+        layout.add_widget(layout.text_input_new_pw)
+
+        idx -= 1
+        layout.add_widget(Label(text='New password:', italic=True, size_hint=(0.4, 1 / n), pos_hint={'x': 0, 'y': 1 / n * idx}))
+        layout.text_input_re_new_pw = TextInput(text='', hint_text='Re-enter new password', password=True, multiline=False, write_tab=False, focus=False, size_hint=(0.6, 1 / n), pos_hint={'x': 0.4, 'y': 1 / n * idx})
+        layout.add_widget(layout.text_input_re_new_pw)
+
+        idx -= 2
+        layout.add_widget(Button(text='Change', italic=True, on_release=self.password_change_validation, size_hint=(0.3, 1 / n), pos_hint={'x': 0.2, 'y': 1 / n * idx}))
+        layout.add_widget(Button(text='Cancel', italic=True, on_release=self.popup_change_password.dismiss, size_hint=(0.3, 1 / n), pos_hint={'x': 0.5, 'y': 1 / n * idx}))
+
+        idx -= 2
+        layout.label_dialogue = Label(text='', italic=True, size_hint=(1, 1 / n), pos_hint={'x': 0, 'y': 1 / n * idx})
+        layout.add_widget(layout.label_dialogue)
+
+        # Adding widgets to the tab content
+        n = 17
+        idx = n
+
+        idx -= 1
+        self.label_cse_start_roll = Label(text="CSE dept. start roll:", italic=True, size_hint=(0.25, 1 / n), pos_hint={'x': 0, 'y': 1 / n * idx})
+        self.text_input_cse_start_roll = TextInput(text=cse_start, hint_text='CSE dept. start roll', password=False, multiline=False, write_tab=False, focus=False, input_filter='int', size_hint=(0.25, 1 / n), pos_hint={'x': 0.25, 'y': 1 / n * idx})
+
+        idx -= 1
+        self.label_ece_start_roll = Label(text="ECE dept. start roll:", italic=True, size_hint=(0.25, 1 / n), pos_hint={'x': 0, 'y': 1 / n * idx})
+        self.text_input_ece_start_roll = TextInput(text=ece_start, hint_text='ECE dept. start roll', password=False, multiline=False, write_tab=False, focus=False, input_filter='int', size_hint=(0.25, 1 / n), pos_hint={'x': 0.25, 'y': 1 / n * idx})
+
+        idx -= 1
+        self.label_bba_start_roll = Label(text="BBA dept. start roll:", italic=True, size_hint=(0.25, 1 / n), pos_hint={'x': 0, 'y': 1 / n * idx})
+        self.text_input_bba_start_roll = TextInput(text=bba_start, hint_text='BBA dept. start roll', password=False, multiline=False, write_tab=False, focus=False, input_filter='int', size_hint=(0.25, 1 / n), pos_hint={'x': 0.25, 'y': 1 / n * idx})
+
+        idx -= 2
+        self.btn_save_start_rolls = Button(text='Save start rolls', italic=True, on_release=self.save_start_roll_changes, size_hint=(0.4, 1 / n), pos_hint={'x': 0.05, 'y': 1 / n * idx})
+
+        idx -= 3
+        self.btn_change_password = Button(text='Change password', italic=True, on_release=self.popup_change_password.open, size_hint=(0.4, 1 / n), pos_hint={'x': 0.05, 'y': 1 / n * idx})
+
+        idx -= 3
+        self.btn_log_out = Button(text='Log out', italic=True, on_release=self.log_out, size_hint=(0.4, 1 / n), pos_hint={'x': 0.05, 'y': 1 / n * idx})
+
+        self.add_widget(self.label_cse_start_roll)
+        self.add_widget(self.text_input_cse_start_roll)
+        self.add_widget(self.label_ece_start_roll)
+        self.add_widget(self.text_input_ece_start_roll)
+        self.add_widget(self.label_bba_start_roll)
+        self.add_widget(self.text_input_bba_start_roll)
+        self.add_widget(self.btn_save_start_rolls)
+
+        self.add_widget(self.btn_change_password)
+        self.add_widget(self.btn_log_out)
+
+
+    def log_out(self, *a):
+        mngr = self.parent.parent.parent.parent.manager
+        mngr.transition.direction = 'right'
+        mngr.current = 'start_screen'
+
+
+    def save_start_roll_changes(self, *a):
+        store = Cache.get('global_data', 'records_store')
+
+        store.put('CSE', start=self.text_input_cse_start_roll.text)
+        store.put('ECE', start=self.text_input_ece_start_roll.text)
+        store.put('BBA', start=self.text_input_bba_start_roll.text)
+
+
+    def password_change_validation(self, *a):
+        content = self.popup_change_password.content
+        store = Cache.get('global_data', 'records_store')
+        curr_pw = store.get('password')['value'] if store.exists('password') else '1234'
+
+        content.label_dialogue.text = ''
+
+        if content.text_input_curr_pw.text != curr_pw:
+            content.label_dialogue.text = "Current password doesn't match !"
+        elif content.text_input_new_pw.text != content.text_input_re_new_pw.text:
+            content.label_dialogue.text = "Re-entering new password doesn't match !"
+        else:
+            store.put('password', value=content.text_input_new_pw.text)
+            self.popup_change_password.dismiss()
+
+
+
 class AddNewTabLayout(RelativeLayout):
     def __init__(self, **kwargs):
         super(AddNewTabLayout, self).__init__(**kwargs)
@@ -276,7 +407,7 @@ class HomeScreenLayout(FloatLayout):
 
         tp = TabbedPanel(do_default_tab=False)
 
-        self.th_home = TabbedPanelHeader(text='Home')
+        self.th_home = TabbedPanelHeader(text='Home', content=HomeTabLayout())
         self.th_add_new = TabbedPanelHeader(text='Add new', content=AddNewTabLayout())
         self.th_find = TabbedPanelHeader(text='Find', content=FindTabLayout())
 
@@ -309,7 +440,12 @@ class StartScreenLayout(FloatLayout):
 
 
     def perform_submit(self, *a):
-        if self.text_input.text == '12345':
+        store = Cache.get('global_data', 'records_store')
+        curr_pw = store.get('password')['value'] if store.exists('password') else '1234'
+
+        if self.text_input.text == curr_pw:
+            self.text_input.text = ''
+
             mngr = self.parent.manager
             mngr.transition.direction = 'left'
             mngr.current = 'home_screen'
@@ -344,6 +480,15 @@ class EnrollmentSystem(App):
 
 
 def main():
+    Cache.register('global_data')
+
+    Cache.append('global_data', 'records_store', JsonStore('others/records.txt'))
+
+    # password: value
+    # CSE: start
+    # ECE: start
+    # BBA: start
+
     app = EnrollmentSystem()
     app.run()
 
