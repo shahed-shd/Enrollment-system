@@ -387,7 +387,7 @@ class HomeTabLayout(RelativeLayout):
         check_and_go('CSE')
         check_and_go('ECE')
         check_and_go('BBA')
-        
+
 
     def password_change_validation(self, *a):
         content = self.popup_change_password.content
@@ -531,9 +531,119 @@ class FindTabLayout(RelativeLayout):
 
         self.student_info_input_layout = StudentInfoInputLayout(size_hint=(0.50, 0.85), pos_hint={'x': 0, 'y': 0.15})
 
+        self.blank_symbol = '--'
+        inp = self.student_info_input_layout
+
+        def spinner_modify(spinner):
+            spinner.text = self.blank_symbol
+            spinner.values.insert(0, self.blank_symbol)
+
+        spinner_modify(inp.spinner_gender)
+        spinner_modify(inp.spinner_bloodgroup)
+        spinner_modify(inp.spinner_ssc_board)
+        spinner_modify(inp.spinner_hsc_board)
+        spinner_modify(inp.spinner_dept)
+
         self.add_widget(self.student_info_input_layout)
-        self.add_widget(Button(text='Find', italic=True, size_hint=(0.20, 0.075), pos_hint={'x': 0.05, 'y': 0.03}))
-        self.add_widget(Button(text='Reset', italic=True, on_release=self.student_info_input_layout.reset_fields, size_hint=(0.20, 0.075), pos_hint={'x': 0.25, 'y': 0.03}))
+        self.add_widget(Button(text='Find', italic=True, on_release=self.find_btn_do, size_hint=(0.20, 0.075), pos_hint={'x': 0.05, 'y': 0.03}))
+        self.add_widget(Button(text='Reset', italic=True, on_release=self.reset_btn_do, size_hint=(0.20, 0.075), pos_hint={'x': 0.25, 'y': 0.03}))
+
+
+    def reset_btn_do(self, *a):
+        self.student_info_input_layout.reset_fields()
+
+        inp = self.student_info_input_layout
+
+        inp.spinner_gender.text = self.blank_symbol
+        inp.spinner_bloodgroup.text = self.blank_symbol
+        inp.spinner_ssc_board.text = self.blank_symbol
+        inp.spinner_hsc_board.text = self.blank_symbol
+        inp.spinner_dept.text = self.blank_symbol
+
+
+    def find_btn_do(self, *a):
+        inp = self.student_info_input_layout
+        qry = session.query(Student)
+
+        if inp.text_input_firstname.text:
+            qry = qry.filter(Student.first_name == inp.text_input_firstname.text)
+
+        if inp.text_input_lastname.text:
+            qry = qry.filter(Student.last_name == inp.text_input_lastname.text)
+
+        if inp.text_input_fathersname.text:
+            qry = qry.filter(Student.fathers_name == inp.text_input_fathersname.text)
+
+        if inp.text_input_mothersname.text:
+            qry = qry.filter(Student.mothers_name == inp.text_input_mothersname.text)
+
+        if inp.spinner_gender.text != self.blank_symbol:
+            qry = qry.filter(Student.gender == inp.spinner_gender.text)
+
+        if inp.spinner_bloodgroup.text != self.blank_symbol:
+            qry = qry.filter(Student.blood_group == inp.spinner_bloodgroup.text)
+
+        if inp.text_input_dob_day.text:
+            qry = qry.filter(func.day(Student.date_of_birth) == int(inp.text_input_dob_day.text))
+
+        if inp.text_input_dob_month.text:
+            qry = qry.filter(func.month(Student.date_of_birth) == int(inp.text_input_dob_month.text))
+
+        if inp.text_input_dob_year.text:
+            qry = qry.filter(func.year(Student.date_of_birth) == int(inp.text_input_dob_year.text))
+
+        if inp.text_input_address.text:
+            qry = qry.filter(Student.address == inp.text_input_address.text)
+
+        if inp.text_input_nationality.text:
+            qry = qry.filter(Student.nationality == inp.text_input_nationality.text)
+
+        if inp.text_input_email_address.text:
+            qry = qry.filter(Student.email_address == inp.text_input_email_address.text)
+
+        if inp.text_input_phone_no.text:
+            qry = qry.filter(Student.phone_no == inp.text_input_phone_no.text)
+
+        if inp.text_input_ssc_roll.text:
+            qry = qry.filter(Student.ssc_roll_no == int(inp.text_input_ssc_roll.text))
+
+        if inp.text_input_ssc_reg.text:
+            qry = qry.filter(Student.ssc_reg_no == int(inp.text_input_ssc_reg.text))
+
+        if inp.text_input_ssc_gpa.text:
+            qry = qry.filter(Student.ssc_gpa == float(inp.text_input_ssc_gpa.text))
+
+        if inp.text_input_ssc_year.text:
+            qry = qry.filter(Student.ssc_year == int(inp.text_input_ssc_year.text))
+
+        if inp.spinner_ssc_board.text != self.blank_symbol:
+            qry = qry.filter(Student.ssc_board == inp.spinner_ssc_board.text)
+
+        if inp.text_input_hsc_roll.text:
+            qry = qry.filter(Student.hsc_roll_no == int(inp.text_input_hsc_roll.text))
+
+        if inp.text_input_hsc_reg.text:
+            qry = qry.filter(Student.hsc_reg_no == int(inp.text_input_hsc_reg.text))
+
+        if inp.text_input_hsc_gpa.text:
+            qry = qry.filter(Student.hsc_gpa == float(inp.text_input_hsc_gpa.text))
+
+        if inp.text_input_hsc_year.text:
+            qry = qry.filter(Student.hsc_year == int(inp.text_input_hsc_year.text))
+
+        if inp.spinner_hsc_board.text != self.blank_symbol:
+            qry = qry.filter(Student.hsc_board == inp.spinner_hsc_board.text)
+
+        if inp.spinner_dept.text != self.blank_symbol:
+            qry = qry.filter(Student.dept == inp.spinner_dept.text)
+
+        if inp.text_input_rollno.text:
+            qry = qry.filter(Student.roll_no == int(inp.text_input_rollno.text))
+
+        print("Query result:")
+        for x in qry:
+            print(x.first_name)
+        print(qry.count())
 
 
 class HomeScreenLayout(FloatLayout):

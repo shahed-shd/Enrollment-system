@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4457551b-59b4-40a1-9f75-ba712b35cb6b" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main.py" afterPath="$PROJECT_DIR$/main.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/others/records.txt" afterPath="$PROJECT_DIR$/others/records.txt" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -22,8 +20,8 @@
       <file leaf-file-name="main.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="124">
-              <caret line="389" column="8" lean-forward="false" selection-start-line="389" selection-start-column="8" selection-end-line="389" selection-end-column="8" />
+            <state relative-caret-position="183">
+              <caret line="645" column="26" lean-forward="false" selection-start-line="645" selection-start-column="26" selection-end-line="645" selection-end-column="26" />
               <folding />
             </state>
           </provider>
@@ -39,15 +37,15 @@
       <find>Column</find>
       <find>String(*)),</find>
       <find>, )</find>
-      <find>ssc</find>
       <find>dialogue</find>
       <find>find_ne</find>
+      <find>ssc</find>
     </findStrings>
     <replaceStrings>
       <replace>input_to_obj</replace>
       <replace>)</replace>
-      <replace>hsc</replace>
       <replace>self.label_dialogue.text</replace>
+      <replace>hsc</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -62,7 +60,7 @@
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="-1" />
-    <option name="width" value="1368" />
+    <option name="width" value="980" />
     <option name="height" value="741" />
   </component>
   <component name="ProjectView">
@@ -249,10 +247,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1" y="0" width="1368" height="741" extended-state="6" />
+    <frame x="-1" y="0" width="980" height="741" extended-state="4" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.100292824" sideWeight="0.49191687" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14528102" sideWeight="0.49191687" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32970452" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.28771386" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -526,8 +524,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="124">
-          <caret line="389" column="8" lean-forward="false" selection-start-line="389" selection-start-column="8" selection-end-line="389" selection-end-column="8" />
+        <state relative-caret-position="183">
+          <caret line="645" column="26" lean-forward="false" selection-start-line="645" selection-start-column="26" selection-end-line="645" selection-end-column="26" />
           <folding />
         </state>
       </provider>
