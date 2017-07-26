@@ -6,6 +6,7 @@ import datetime
 import os
 import re
 import shutil
+from functools import partial
 
 from kivy.app import App
 from kivy.cache import Cache
@@ -21,7 +22,10 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
 from kivy.uix.filechooser import FileChooserListView
 from kivy.storage.jsonstore import JsonStore
+from kivy.uix.recycleview import RecycleView
+from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.graphics import Color, Rectangle
+from kivy.clock import Clock
 
 from sqlalchemy import create_engine, Table, Column, Integer, String, Date, Float, func
 from sqlalchemy.ext.declarative import declarative_base
@@ -338,6 +342,71 @@ class StudentProfileLayout(RelativeLayout):
         self.assign_student_info()
 
 
+class RecycleViewListLayout(RelativeLayout):
+    def __init__(self, **kwargs):
+        super(RecycleViewListLayout, self).__init__(**kwargs)
+
+        self.student = None
+        self.popup_student_profile = Popup(title='Profile', title_align='center', content=StudentProfileLayout(), auto_dismiss=False, size_hint=(0.95, 0.95), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+
+        n = 5
+        idx = n
+
+        idx -= 3
+        self.label_dept_roll = Label(text='', italic=True, size_hint=(1, 1 / n), pos_hint={'x': 0, 'y': 1 / n * idx})
+
+        idx -= 1
+        self.label_name = Label(text='', italic=True, size_hint=(1, 1 / n), pos_hint={'x': 0, 'y': 1 / n * idx})
+
+        idx -= 1
+        self.btn_profile = Button(text='Profile', italic=True, on_release=self.btn_profile_do, size_hint=(0.25, 1 / n), pos_hint={'x': 0.25, 'y': 1 / n * idx})
+        self.btn_delete = Button(text='Delete', italic=True, size_hint=(0.25, 1 / n), pos_hint={'x': 0.5, 'y': 1 / n * idx})
+
+        self.add_widget(self.label_dept_roll)
+        self.add_widget(self.label_name)
+        self.add_widget(self.btn_profile)
+        self.add_widget(self.btn_delete)
+
+        Clock.schedule_once(self.assing_student_info, 0)
+
+
+    def assing_student_info(self, *a):
+        self.label_dept_roll.text=self.student.dept + ' - ' + str(self.student.roll_no)
+        self.label_name.text=self.student.first_name + ' ' + self.student.last_name
+
+
+    def btn_profile_do(self, *a):
+        # res = session.query(Student).filter(Student.roll_no == 2017001).one()
+        self.popup_student_profile.content.attach_student(student=self.student)
+        self.popup_student_profile.open()
+
+
+class RBL(RecycleBoxLayout):
+    def __init__(self, **kwargs):
+        super(RBL, self).__init__(**kwargs)
+
+        self.default_size_hint = (1, None)
+        self.default_size = (None, 100)
+        self.size_hint_y = None
+        self.bind(minimum_height=lambda a, b: setattr(self, 'height', b))
+        self.orientation = 'vertical'
+
+
+class RV(RecycleView):
+    def __init__(self, **kwargs):
+        super(RV, self).__init__(**kwargs)
+
+        self.add_widget(RBL())
+        self.viewclass = 'RecycleViewListLayout'
+        self.data = []
+        # self.data = [{'text': str(x)} for x in range(100)]
+
+
+    def set_data(self, *a, student_list):
+        self.data = [{'student': stu} for stu in student_list]
+        print("data: ", self.data)
+
+
 class HomeTabLayout(RelativeLayout):
     def __init__(self, **kwargs):
         super(HomeTabLayout, self).__init__(**kwargs)
@@ -596,6 +665,8 @@ class FindTabLayout(RelativeLayout):
         super(FindTabLayout, self).__init__(**kwargs)
 
         self.student_info_input_layout = StudentInfoInputLayout(size_hint=(0.50, 0.85), pos_hint={'x': 0, 'y': 0.15})
+        self.label_query_res_count = Label(text='', italic=True, size_hint=(0.5, 0.1), pos_hint={'x': 0.5, 'y': 0.9})
+        self.recycle_view = RV(size_hint=(0.5, 0.9), pos_hint={'x': 0.5, 'y': 0})
 
         self.blank_symbol = '--'
         inp = self.student_info_input_layout
@@ -613,9 +684,8 @@ class FindTabLayout(RelativeLayout):
         self.add_widget(self.student_info_input_layout)
         self.add_widget(Button(text='Find', italic=True, on_release=self.find_btn_do, size_hint=(0.20, 0.075), pos_hint={'x': 0.05, 'y': 0.03}))
         self.add_widget(Button(text='Reset', italic=True, on_release=self.reset_btn_do, size_hint=(0.20, 0.075), pos_hint={'x': 0.25, 'y': 0.03}))
-
-        # Profile popup
-        self.popup_student_profile = Popup(title='Profile', title_align='center', content=StudentProfileLayout(), auto_dismiss=False, size_hint=(0.95, 0.95), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.add_widget(self.label_query_res_count)
+        self.add_widget(self.recycle_view)
 
 
     def reset_btn_do(self, *a):
@@ -629,9 +699,9 @@ class FindTabLayout(RelativeLayout):
         inp.spinner_hsc_board.text = self.blank_symbol
         inp.spinner_dept.text = self.blank_symbol
 
-        res = session.query(Student).filter(Student.roll_no == 2017001).one()
-        self.popup_student_profile.content.attach_student(student=res)
-        self.popup_student_profile.open()
+        self.label_query_res_count.text = ''
+        if self.recycle_view in self.children:
+            self.remove_widget(self.recycle_view)
 
 
     def find_btn_do(self, *a):
@@ -713,10 +783,18 @@ class FindTabLayout(RelativeLayout):
         if inp.text_input_rollno.text:
             qry = qry.filter(Student.roll_no == int(inp.text_input_rollno.text))
 
-        print("Query result:")
-        for x in qry:
-            print(x.first_name)
-        print(qry.count())
+        self.label_query_res_count.text = str(qry.count()) + ' results found.'
+
+        if self.recycle_view in self.children:
+            self.remove_widget(self.recycle_view)
+
+        self.recycle_view = RV(size_hint=(0.5, 0.9), pos_hint={'x': 0.5, 'y': 0})
+        self.add_widget(self.recycle_view)
+        self.recycle_view.set_data(student_list=qry.all())
+        # print("Query result:")
+        # for x in qry:
+        #     print(x.first_name)
+        # print(qry.count())
 
 
 class HomeScreenLayout(FloatLayout):
