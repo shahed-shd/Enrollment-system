@@ -3,6 +3,7 @@ kivy.require('1.10.0')
 
 import time
 import datetime
+import os
 import re
 import shutil
 
@@ -272,6 +273,71 @@ class FileChooserPopup(Popup):
         self.dismiss()
 
 
+class StudentProfileLayout(RelativeLayout):
+    def __init__(self, **kwargs):
+        super(StudentProfileLayout, self).__init__(**kwargs)
+
+        self.student = None     # Will be assigned in attach_student()
+        self.profile_pic = Image(allow_stretch=True, keep_ratio=False, size_hint=(0.20, 0.40), pos_hint={'x': 0.025, 'y': 0.55})    # source will be add in attach_student()
+        self.student_info_input_layout = StudentInfoInputLayout(size_hint=(0.75, 0.75), pos_hint={'x': 0.25, 'y': 0.25})
+        self.btn_cancel = Button(text='Cancel', italic=True, on_release=self.btn_cancel_do, size_hint=(0.2, 0.06), pos_hint={'x': 0.75, 'y': 0.08})
+
+        self.text_input_file_choose = TextInput(text='', hint_text='No file selected', readonly=True, size_hint=(0.6, 0.057), pos_hint={'x': 0.25, 'y': 0.18})
+        self.file_chooser_popup = FileChooserPopup(size_hint=(0.8, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.file_chooser_popup.bind(on_dismiss=lambda popup_instance, *a: setattr(self.text_input_file_choose, 'text', popup_instance.text_input.text))
+
+        self.add_widget(self.profile_pic)
+        self.add_widget(self.student_info_input_layout)
+
+        self.add_widget(Label(text='Photo:', italic=True, size_hint=(0.25, 0.057), pos_hint={'x': 0, 'y': 0.18}))
+        self.add_widget(self.text_input_file_choose)
+        self.add_widget(Button(text='Choose', italic=True, on_release=self.file_chooser_popup.open, size_hint=(0.14, 0.057), pos_hint={'x': 0.85, 'y': 0.18}))
+
+        self.add_widget(self.btn_cancel)
+
+
+    def btn_cancel_do(self, *a):
+        self.parent.parent.parent.dismiss()
+
+
+    def assign_student_info(self, *a):
+        inp = self.student_info_input_layout
+        student = self.student
+
+        inp.spinner_dept.text = student.dept
+        inp.text_input_rollno.text = str(student.roll_no)
+        inp.text_input_firstname.text = student.first_name
+        inp.text_input_lastname.text = student.last_name
+        inp.text_input_fathersname.text = student.fathers_name
+        inp.text_input_mothersname.text = student.mothers_name
+        inp.spinner_gender.text = student.gender
+        inp.spinner_bloodgroup.text = student.blood_group
+        inp.text_input_dob_day.text = str(student.date_of_birth.day)
+        inp.text_input_dob_month.text = str(student.date_of_birth.month)
+        inp.text_input_dob_year.text = str(student.date_of_birth.year)
+        inp.text_input_address.text = student.address
+        inp.text_input_nationality.text = student.nationality
+        inp.text_input_email_address.text = student.email_address
+        inp.text_input_phone_no.text = student.phone_no
+        inp.text_input_ssc_roll.text = str(student.ssc_roll_no)
+        inp.text_input_ssc_reg.text = str(student.ssc_reg_no)
+        inp.text_input_ssc_gpa.text = str(student.ssc_gpa)
+        inp.text_input_ssc_year.text = str(student.ssc_year)
+        inp.spinner_ssc_board.text = student.ssc_board
+        inp.text_input_hsc_roll.text = str(student.hsc_roll_no)
+        inp.text_input_hsc_reg.text = str(student.hsc_reg_no)
+        inp.text_input_hsc_gpa.text = str(student.hsc_gpa)
+        inp.text_input_hsc_year.text = str(student.hsc_year)
+        inp.spinner_hsc_board.text = student.hsc_board
+        self.text_input_file_choose.text = student.photo_path
+        self.profile_pic.source = student.photo_path
+
+
+    def attach_student(self, *a, student):
+        self.student = student
+        self.assign_student_info()
+
+
 class HomeTabLayout(RelativeLayout):
     def __init__(self, **kwargs):
         super(HomeTabLayout, self).__init__(**kwargs)
@@ -512,7 +578,7 @@ class AddNewTabLayout(RelativeLayout):
         if not input_to_obj('spinner_hsc_board', 'hsc_board'): return
 
         photo_path_from = self.text_input_file_choose.text if self.text_input_file_choose.text != '' else 'images/blank_profile_pic.jpg'
-        photo_path_to = 'images/profile_pics/' + inp.spinner_dept.text + '-' + inp.text_input_rollno.text
+        photo_path_to = 'images/profile_pics/' + inp.spinner_dept.text + '-' + inp.text_input_rollno.text + os.path.splitext(photo_path_from)[1]
         shutil.copyfile(photo_path_from, photo_path_to)
         new_student.photo_path = photo_path_to
 
@@ -548,6 +614,9 @@ class FindTabLayout(RelativeLayout):
         self.add_widget(Button(text='Find', italic=True, on_release=self.find_btn_do, size_hint=(0.20, 0.075), pos_hint={'x': 0.05, 'y': 0.03}))
         self.add_widget(Button(text='Reset', italic=True, on_release=self.reset_btn_do, size_hint=(0.20, 0.075), pos_hint={'x': 0.25, 'y': 0.03}))
 
+        # Profile popup
+        self.popup_student_profile = Popup(title='Profile', title_align='center', content=StudentProfileLayout(), auto_dismiss=False, size_hint=(0.95, 0.95), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+
 
     def reset_btn_do(self, *a):
         self.student_info_input_layout.reset_fields()
@@ -559,6 +628,10 @@ class FindTabLayout(RelativeLayout):
         inp.spinner_ssc_board.text = self.blank_symbol
         inp.spinner_hsc_board.text = self.blank_symbol
         inp.spinner_dept.text = self.blank_symbol
+
+        res = session.query(Student).filter(Student.roll_no == 2017001).one()
+        self.popup_student_profile.content.attach_student(student=res)
+        self.popup_student_profile.open()
 
 
     def find_btn_do(self, *a):
