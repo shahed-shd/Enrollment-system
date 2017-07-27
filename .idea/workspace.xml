@@ -21,7 +21,7 @@
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="121">
-              <caret line="297" column="92" lean-forward="false" selection-start-line="297" selection-start-column="92" selection-end-line="297" selection-end-column="92" />
+              <caret line="1024" column="19" lean-forward="false" selection-start-line="1024" selection-start-column="14" selection-end-line="1024" selection-end-column="19" />
               <folding />
             </state>
           </provider>
@@ -47,7 +47,6 @@
       <find>addNewtab</find>
       <find>findtabla</find>
       <find>set_data</find>
-      <find>listla</find>
       <find>StudentPro</find>
       <find>Student</find>
       <find>enum</find>
@@ -59,6 +58,8 @@
       <find>label_dialogue</find>
       <find>listlay</find>
       <find>profilelay</find>
+      <find>listla</find>
+      <find>print</find>
     </findStrings>
     <replaceStrings>
       <replace>input_to_obj</replace>
@@ -588,7 +589,7 @@
     <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="121">
-          <caret line="297" column="92" lean-forward="false" selection-start-line="297" selection-start-column="92" selection-end-line="297" selection-end-column="92" />
+          <caret line="1024" column="19" lean-forward="false" selection-start-line="1024" selection-start-column="14" selection-end-line="1024" selection-end-column="19" />
           <folding />
         </state>
       </provider>

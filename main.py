@@ -581,7 +581,7 @@ class RecycleViewListLayout(RelativeLayout):
 
         idx -= 1
         self.btn_profile = Button(text='Profile', italic=True, on_release=self.btn_profile_do, size_hint=(0.25, 1 / n), pos_hint={'x': 0.25, 'y': 1 / n * idx})
-        self.btn_delete = Button(text='Delete', italic=True, size_hint=(0.25, 1 / n), pos_hint={'x': 0.5, 'y': 1 / n * idx})
+        self.btn_delete = Button(text='Delete', italic=True, on_release=self.btn_delete_do, size_hint=(0.25, 1 / n), pos_hint={'x': 0.5, 'y': 1 / n * idx})
 
         self.add_widget(self.label_dept_roll)
         self.add_widget(self.label_name)
@@ -600,6 +600,12 @@ class RecycleViewListLayout(RelativeLayout):
         # res = session.query(Student).filter(Student.roll_no == 2017001).one()
         self.popup_student_profile.content.attach_student(student=self.student)
         self.popup_student_profile.open()
+
+
+    def btn_delete_do(self, *a):
+        session.delete(self.student)
+        session.commit()
+        self.parent.parent.parent.find_btn_do()
 
 
     def popup_student_profile_dismiss_bind(self, *a):
@@ -625,12 +631,10 @@ class RV(RecycleView):
         self.add_widget(RBL())
         self.viewclass = 'RecycleViewListLayout'
         self.data = []
-        # self.data = [{'text': str(x)} for x in range(100)]
 
 
     def set_data(self, *a, student_list):
         self.data = [{'student': stu} for stu in student_list]
-        print("data: ", self.data)
 
 
 class HomeTabLayout(RelativeLayout):
@@ -817,7 +821,6 @@ class AddNewTabLayout(RelativeLayout):
 
         def input_to_obj(input_attr, obj_attr, meta=''):
             value = getattr(inp, input_attr).text
-            print(input_attr, ',', obj_attr, ',', value, ',', len(value), ',', meta)
             if value:
                 setattr(new_student, obj_attr, value)
                 return True
@@ -1088,8 +1091,6 @@ class MainScreenManager(ScreenManager):
 
         self.add_widget(start_scr)
         self.add_widget(home_scr)
-
-        self.current = 'home_screen'
 
 
 class EnrollmentSystem(App):
