@@ -282,13 +282,20 @@ class StudentProfileLayout(RelativeLayout, kivy.uix.widget.Widget):
         super(StudentProfileLayout, self).__init__(**kwargs)
 
         self.student = None     # Will be assigned in attach_student()
+        self.any_change = False
+
         self.profile_pic = Image(allow_stretch=True, keep_ratio=False, size_hint=(0.20, 0.40), pos_hint={'x': 0.025, 'y': 0.55})    # source will be add in attach_student()
         self.student_info_input_layout = StudentInfoInputLayout(size_hint=(0.75, 0.75), pos_hint={'x': 0.25, 'y': 0.25})
+        self.student_info_input_layout.spinner_dept.bind(text=self.student_info_input_dept_bind)
+        self.student_info_input_layout.text_input_rollno.readonly = True
+
         self.btn_cancel = Button(text='Cancel', italic=True, on_release=self.btn_cancel_do, size_hint=(0.2, 0.06), pos_hint={'x': 0.75, 'y': 0.08})
         self.btn_ok_update = Button(text='OK', italic=True, on_release=self.btn_ok_update_do, size_hint=(0.2, 0.06), pos_hint={'x': 0.55, 'y': 0.08})
         self.btn_undo_changes = Button(text='Undo changes', italic=True, on_release=self.assign_student_info, opacity=0.25, size_hint=(0.2, 0.06), pos_hint={'x': 0.35, 'y': 0.08})
+        self.label_dialogue = Label(text='', italic=True, size_hint=(1, 0.06), pos_hint={'x': 0, 'y': 0.01})
 
         self.text_input_file_choose = TextInput(text='', hint_text='No file selected', readonly=True, size_hint=(0.6, 0.057), pos_hint={'x': 0.25, 'y': 0.18})
+        self.text_input_file_choose.bind(text=lambda *a: setattr(self.profile_pic, 'source', self.text_input_file_choose.text))
         self.file_chooser_popup = FileChooserPopup(size_hint=(0.8, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         self.file_chooser_popup.bind(on_dismiss=lambda popup_instance, *a: setattr(self.text_input_file_choose, 'text', popup_instance.text_input.text))
 
@@ -302,12 +309,36 @@ class StudentProfileLayout(RelativeLayout, kivy.uix.widget.Widget):
         self.add_widget(self.btn_cancel)
         self.add_widget(self.btn_ok_update)
         self.add_widget(self.btn_undo_changes)
+        self.add_widget(self.label_dialogue)
 
         for ch in self.student_info_input_layout.children:
             if type(ch) != Label:
                 ch.bind(text=self.any_change_do)
 
         self.text_input_file_choose.bind(text=self.any_change_do)
+
+
+    def student_info_input_dept_bind(self, *a):
+        '''Set the roll according to dept.'''
+
+        dept = self.student_info_input_layout.spinner_dept.text
+
+        if dept == self.student.dept:
+            self.student_info_input_layout.text_input_rollno.text = str(self.student.roll_no)
+            return
+
+        res = session.query(Student.roll_no).filter(Student.dept == dept).order_by(Student.roll_no)
+        L = [x[0] for x in res]
+
+        store = Cache.get('global_data', 'records_store')
+        start = int(store.get(dept)['start'])
+
+        next_roll = find_next_roll_to_have(L, start)
+        self.student_info_input_layout.text_input_rollno.text = str(next_roll)
+
+
+    # def text_input_file_choose_bind(self, *a):
+    #     self.profile_pic.source = self.text_input_file_choose.text
 
 
     def check_any_change(self, *a):
@@ -399,7 +430,9 @@ class StudentProfileLayout(RelativeLayout, kivy.uix.widget.Widget):
         if self.student == None:
             return
 
-        if self.check_any_change():
+        self.any_change = self.check_any_change()
+
+        if self.any_change:
             self.btn_undo_changes.opacity = 1
             self.btn_ok_update.text = 'Update'
         else:
@@ -408,7 +441,83 @@ class StudentProfileLayout(RelativeLayout, kivy.uix.widget.Widget):
 
 
     def btn_ok_update_do(self, *a):
-        pass
+        if self.any_change:
+            self.label_dialogue.text = ''
+            inp = self.student_info_input_layout
+            student = self.student
+
+            def input_to_obj(input_attr, obj_attr, meta=''):
+                value = getattr(inp, input_attr).text
+                if value:
+                    if value != str(getattr(student, obj_attr)):
+                        setattr(student, obj_attr, value)
+                    return True
+                else:
+                    self.label_dialogue.text = meta + " needs to be filled up !"
+                    return False
+
+            if not input_to_obj('text_input_firstname', 'first_name', 'First name'): return
+            if not input_to_obj('text_input_lastname', 'last_name', 'Last name'): return
+            if not input_to_obj('text_input_fathersname', 'fathers_name', "Father's name"): return
+            if not input_to_obj('text_input_mothersname', 'mothers_name', "Mother's name"): return
+            if not input_to_obj('spinner_gender', 'gender'): return
+            if not input_to_obj('spinner_bloodgroup', 'blood_group'): return
+
+            if inp.text_input_dob_day.text != '' and inp.text_input_dob_month.text != '' and inp.text_input_dob_year.text != '':
+                d = int(inp.text_input_dob_day.text)
+                m = int(inp.text_input_dob_month.text)
+                y = int(inp.text_input_dob_year.text)
+
+                if d != student.date_of_birth.day or m != student.date_of_birth.month or y != student.date_of_birth.year:
+                    if is_valid_date(y, m, d):
+                        student.date_of_birth = datetime.date(year=y, month=m, day=d)
+                    else:
+                        self.label_dialogue.text = "Invalid date of birth !"
+                        return
+            else:
+                self.label_dialogue.text = "Date of birth needs to be filled up !"
+                return
+
+            if not input_to_obj('text_input_address', 'address', 'Address'): return
+            if not input_to_obj('text_input_nationality', 'nationality', 'Nationality'): return
+
+            email = inp.text_input_email_address.text
+            if email != student.email_address:
+                if email:
+                    if is_valid_emaid(email):
+                        input_to_obj('text_input_email_address', 'email_address')
+                    else:
+                        self.label_dialogue.text = "Invalid email address !"
+                        return
+                else:
+                    self.label_dialogue.text = "Email address needs to be filled up !"
+                    return
+
+            if not input_to_obj('text_input_phone_no', 'phone_no', 'Phone no.'): return
+            if not input_to_obj('text_input_ssc_roll', 'ssc_roll_no', 'SSC roll no. '): return
+            if not input_to_obj('text_input_ssc_reg', 'ssc_reg_no', 'SSC reg. no.'): return
+            if not input_to_obj('text_input_ssc_gpa', 'ssc_gpa', 'SSC GPA'): return
+            if not input_to_obj('text_input_ssc_year', 'ssc_year', 'SSC passing year'): return
+            if not input_to_obj('spinner_ssc_board', 'ssc_board'): return
+            if not input_to_obj('text_input_hsc_roll', 'hsc_roll_no', 'HSC roll no.'): return
+            if not input_to_obj('text_input_hsc_reg', 'hsc_reg_no', 'HSC reg. no.'): return
+            if not input_to_obj('text_input_hsc_gpa', 'hsc_gpa', 'HSC GPA'): return
+            if not input_to_obj('text_input_hsc_year', 'hsc_year', 'HSC passing year'): return
+            if not input_to_obj('spinner_hsc_board', 'hsc_board'): return
+
+            if self.text_input_file_choose.text != student.photo_path:
+                photo_path_from = self.text_input_file_choose.text if self.text_input_file_choose.text != '' else 'images/blank_profile_pic.jpg'
+                photo_path_to = 'images/profile_pics/' + inp.spinner_dept.text + '-' + inp.text_input_rollno.text + os.path.splitext(photo_path_from)[1]
+                shutil.copyfile(photo_path_from, photo_path_to)
+                student.photo_path = photo_path_to
+
+            if not input_to_obj('spinner_dept', 'dept'): return
+            if not input_to_obj('text_input_rollno', 'roll_no'): return
+
+            session.commit()
+            self.label_dialogue.text = 'Student info Updated'
+
+        self.btn_cancel_do()
 
 
     def btn_cancel_do(self, *a):
@@ -459,6 +568,7 @@ class RecycleViewListLayout(RelativeLayout):
 
         self.student = None
         self.popup_student_profile = Popup(title='Profile', title_align='center', content=StudentProfileLayout(), auto_dismiss=False, size_hint=(0.95, 0.95), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.popup_student_profile.bind(on_dismiss=self.popup_student_profile_dismiss_bind)
 
         n = 5
         idx = n
@@ -490,6 +600,11 @@ class RecycleViewListLayout(RelativeLayout):
         # res = session.query(Student).filter(Student.roll_no == 2017001).one()
         self.popup_student_profile.content.attach_student(student=self.student)
         self.popup_student_profile.open()
+
+
+    def popup_student_profile_dismiss_bind(self, *a):
+        if self.popup_student_profile.content.any_change:
+            self.assing_student_info()
 
 
 class RBL(RecycleBoxLayout):
