@@ -104,6 +104,14 @@ def is_valid_emaid(email):
 
 # UI part ..................................................
 
+def set_background_color(instance, color_tuple, *a):
+    # Canvas color.
+    with instance.canvas.before:
+        Color(*color_tuple)
+        instance.rect = Rectangle(size=instance.size, pos=instance.pos)
+    instance.bind(size=lambda *a: setattr(instance.rect, 'size', instance.size), pos=lambda *a: setattr(instance.rect, 'pos', instance.pos))
+
+
 
 class StudentInfoInputLayout(RelativeLayout):
     def __init__(self, **kwargs):
@@ -516,11 +524,15 @@ class StudentProfileLayout(RelativeLayout, kivy.uix.widget.Widget):
 
             session.commit()
             self.label_dialogue.text = 'Student info Updated'
-
-        self.btn_cancel_do()
+            self.any_change = False
+            self.btn_undo_changes.opacity = 0.2
+            self.btn_ok_update.text = 'OK'
+        else:
+            self.btn_cancel_do()
 
 
     def btn_cancel_do(self, *a):
+        self.label_dialogue.text = ''
         self.parent.parent.parent.dismiss()
 
 
@@ -640,6 +652,8 @@ class RV(RecycleView):
 class HomeTabLayout(RelativeLayout):
     def __init__(self, **kwargs):
         super(HomeTabLayout, self).__init__(**kwargs)
+
+        set_background_color(instance=self, color_tuple=(0, 1, 1, 0.5))
 
         # Get start value
         store = Cache.get('global_data', 'records_store')
@@ -774,6 +788,8 @@ class AddNewTabLayout(RelativeLayout):
     def __init__(self, **kwargs):
         super(AddNewTabLayout, self).__init__(**kwargs)
 
+        set_background_color(instance=self, color_tuple=(0, 1, 1, 0.5))
+
         self.student_info_input_layout = StudentInfoInputLayout(size_hint=(1, 0.75), pos_hint={'x': 0, 'y': 0.25})
         self.student_info_input_dept_bind()     # first fill the roll.
         self.student_info_input_layout.spinner_dept.bind(text=self.student_info_input_dept_bind)
@@ -892,6 +908,8 @@ class AddNewTabLayout(RelativeLayout):
 class FindTabLayout(RelativeLayout):
     def __init__(self, **kwargs):
         super(FindTabLayout, self).__init__(**kwargs)
+
+        set_background_color(instance=self, color_tuple=(0, 1, 1, 0.5))
 
         self.student_info_input_layout = StudentInfoInputLayout(size_hint=(0.50, 0.85), pos_hint={'x': 0, 'y': 0.15})
         self.label_query_res_count = Label(text='', italic=True, size_hint=(0.5, 0.1), pos_hint={'x': 0.5, 'y': 0.9})
@@ -1061,19 +1079,34 @@ class StartScreenLayout(FloatLayout):
         self.text_input = TextInput(text='', hint_text='Enter password here.', password=True, multiline=False, write_tab=False, focus=False, size_hint=(0.5, 0.075), pos_hint={'x': 0.25, 'y': 0.175})
         self.add_widget(self.text_input)
         self.add_widget(Button(text='Submit', bold=True, italic=True, on_release=self.perform_submit, size_hint=(0.15, 0.075), pos_hint={'x': 0.35, 'y': 0.075}))
-        self.add_widget(Button(text='Reset', bold=True, italic=True, on_release=lambda *a: setattr(self.text_input, 'text', ''), size_hint=(0.15, 0.075), pos_hint={'x': 0.5, 'y': 0.075}))
+        self.add_widget(Button(text='Reset', bold=True, italic=True, on_release=self.btn_reset_do, size_hint=(0.15, 0.075), pos_hint={'x': 0.5, 'y': 0.075}))
+        self.label_dialogue = Label(text='', italic=True, size_hint=(1, 0.075), pos_hint={'x': 0, 'y': 0.0})
+        self.add_widget(self.label_dialogue)
 
 
     def perform_submit(self, *a):
+        if not self.text_input.text:
+            self.label_dialogue.text = 'Enter the password.'
+            return
+
+
         store = Cache.get('global_data', 'records_store')
         curr_pw = store.get('password')['value'] if store.exists('password') else '1234'
 
         if self.text_input.text == curr_pw:
             self.text_input.text = ''
+            self.label_dialogue.text = ''
 
             mngr = self.parent.manager
             mngr.transition.direction = 'left'
             mngr.current = 'home_screen'
+        else:
+            self.label_dialogue.text = 'Wrong passwrod !'
+
+
+    def btn_reset_do(self, *a):
+        self.text_input.text = ''
+        self.label_dialogue.text = ''
 
 
 class MainScreenManager(ScreenManager):
