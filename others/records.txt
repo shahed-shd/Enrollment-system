@@ -1,0 +1,1 @@
+{"CSE": {"start": "2017001"}, "BBA": {"start": "2017001"}, "password": {"value": "1234"}, "ECE": {"start": "2017001"}}
